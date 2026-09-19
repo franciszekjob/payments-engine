@@ -7,7 +7,7 @@ use crate::domain::{Account, ClientId};
 use crate::engine::PaymentEngine;
 
 #[derive(Debug, Serialize, PartialEq)]
-pub struct AccountRow {
+pub(crate) struct AccountRow {
     client: ClientId,
     available: Decimal,
     held: Decimal,
@@ -16,7 +16,7 @@ pub struct AccountRow {
 }
 
 impl AccountRow {
-    pub fn from_account(client: ClientId, account: &Account) -> Self {
+    pub(crate) fn from_account(client: ClientId, account: &Account) -> Self {
         Self {
             client,
             available: account.available(),

@@ -30,14 +30,14 @@ pub enum Command {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DepositState {
+pub(crate) enum DepositState {
     Settled,
     Disputed,
     ChargedBack,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum TransactionRecord {
+pub(crate) enum TransactionRecord {
     Deposit {
         client: ClientId,
         amount: Decimal,
@@ -50,7 +50,7 @@ pub enum TransactionRecord {
 }
 
 impl TransactionRecord {
-    pub fn deposit(client: ClientId, amount: Decimal) -> Self {
+    pub(crate) fn deposit(client: ClientId, amount: Decimal) -> Self {
         Self::Deposit {
             client,
             amount,
@@ -58,30 +58,33 @@ impl TransactionRecord {
         }
     }
 
-    pub fn withdrawal(client: ClientId, amount: Decimal) -> Self {
+    pub(crate) fn withdrawal(client: ClientId, amount: Decimal) -> Self {
         Self::Withdrawal { client, amount }
     }
 
-    pub fn client(&self) -> ClientId {
+    #[cfg(test)]
+    pub(crate) fn client(&self) -> ClientId {
         match self {
             Self::Deposit { client, .. } | Self::Withdrawal { client, .. } => *client,
         }
     }
 
-    pub fn amount(&self) -> Decimal {
+    #[cfg(test)]
+    pub(crate) fn amount(&self) -> Decimal {
         match self {
             Self::Deposit { amount, .. } | Self::Withdrawal { amount, .. } => *amount,
         }
     }
 
-    pub fn deposit_state(&self) -> Option<DepositState> {
+    #[cfg(test)]
+    pub(crate) fn deposit_state(&self) -> Option<DepositState> {
         match self {
             Self::Deposit { state, .. } => Some(*state),
             Self::Withdrawal { .. } => None,
         }
     }
 
-    pub fn dispute(&mut self) -> bool {
+    pub(crate) fn dispute(&mut self) -> bool {
         match self {
             Self::Deposit { state, .. } if *state == DepositState::Settled => {
                 *state = DepositState::Disputed;
@@ -91,7 +94,7 @@ impl TransactionRecord {
         }
     }
 
-    pub fn resolve(&mut self) -> bool {
+    pub(crate) fn resolve(&mut self) -> bool {
         match self {
             Self::Deposit { state, .. } if *state == DepositState::Disputed => {
                 *state = DepositState::Settled;
@@ -101,7 +104,7 @@ impl TransactionRecord {
         }
     }
 
-    pub fn chargeback(&mut self) -> bool {
+    pub(crate) fn chargeback(&mut self) -> bool {
         match self {
             Self::Deposit { state, .. } if *state == DepositState::Disputed => {
                 *state = DepositState::ChargedBack;
