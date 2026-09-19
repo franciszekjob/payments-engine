@@ -136,6 +136,21 @@ fn missing_input_argument_returns_an_error() {
 }
 
 #[test]
+fn additional_input_argument_returns_an_error() {
+    let output = run_binary(&[
+        "tests/data/multiple_clients.csv",
+        "tests/data/dispute_resolve.csv",
+    ]);
+
+    assert!(!output.status.success());
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("expected exactly one input file"),
+        "unexpected stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+#[test]
 fn nonexistent_input_file_returns_an_error() {
     let output = Command::new(env!("CARGO_BIN_EXE_payments-engine"))
         .arg(file_path("does-not-exist.csv"))
