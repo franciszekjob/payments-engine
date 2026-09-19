@@ -168,3 +168,17 @@ fn missing_payment_amount_returns_an_error() {
         AppError::Command(CommandError::MissingWithdrawalAmount)
     ));
 }
+
+#[test]
+fn malformed_csv_values_return_csv_errors() {
+    let inputs = [
+        "type,client,tx,amount\ninvalid,1,1,10\n",
+        "type,client,tx,amount\ndeposit,invalid,1,10\n",
+        "type,client,tx,amount\ndeposit,1,invalid,10\n",
+    ];
+
+    for input in inputs {
+        let error = run(input.as_bytes(), Vec::new()).unwrap_err();
+        assert!(matches!(error, AppError::Csv(_)));
+    }
+}
