@@ -32,10 +32,15 @@ impl Account {
 
     pub(crate) fn deposit(&mut self, amount: Decimal) -> Result<(), AccountError> {
         self.validate_mutation(amount)?;
-        self.available = self
+        let available = self
             .available
             .checked_add(amount)
             .ok_or(AccountError::ArithmeticOverflow)?;
+        available
+            .checked_add(self.held)
+            .ok_or(AccountError::ArithmeticOverflow)?;
+
+        self.available = available;
 
         Ok(())
     }
@@ -234,5 +239,24 @@ mod tests {
             Err(AccountError::NonPositiveAmount(dec!(-1)))
         );
         assert_eq!(account, Account::new());
+    }
+
+    #[test]
+    fn deposit_rejects_an_overflowing_total_without_mutation() {
+        let amount: Decimal = "7000000000000000000000000000.0".parse().unwrap();
+        let mut account = Account::new();
+        account.deposit(amount).unwrap();
+        account.hold(amount).unwrap();
+
+        for _ in 0..10 {
+            account.deposit(amount).unwrap();
+        }
+
+        let before = account.clone();
+        assert_eq!(
+            account.deposit(amount),
+            Err(AccountError::ArithmeticOverflow)
+        );
+        assert_eq!(account, before);
     }
 }
