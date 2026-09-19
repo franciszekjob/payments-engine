@@ -31,20 +31,11 @@ pub enum AccountError {
     ArithmeticOverflow,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum AppError {
-    Csv(csv::Error),
-    Command(CommandError),
-}
+    #[error(transparent)]
+    Csv(#[from] csv::Error),
 
-impl From<csv::Error> for AppError {
-    fn from(error: csv::Error) -> Self {
-        Self::Csv(error)
-    }
-}
-
-impl From<CommandError> for AppError {
-    fn from(error: CommandError) -> Self {
-        Self::Command(error)
-    }
+    #[error(transparent)]
+    Command(#[from] CommandError),
 }
